@@ -1,0 +1,22 @@
+.gcloudignore
+# Ignore the .gcloudignore file itself
+.gcloudignore
+
+# Ignore the local .vscode configuration
+.vscode/
+
+# Ignore Python's cache and virtual environment
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+env/
+venv/
+
+# Ignore project-specific files
+*.swp
+*.swo
+*.DS_Store
+
+# Ignore git directory
+.git/
