@@ -34,18 +34,23 @@ You can now access the interactive API documentation at `http://localhost:8000/d
 
 ## Features
 
-* **Comprehensive Astrological Calculations**: Utilizes the PyJHora library for a wide range of Vedic astrology calculations.
+* **Comprehensive Astrological Calculations**: Utilizes the PyJHora library for a wide range of Vedic astrology calculations including all 16 divisional charts (D1 to D60).
+* **Full Dasha Analysis**: Complete Vimsottari Maha Dasha and Bhukti (sub-period) calculations.
+* **Planetary & House Strength**: Detailed Shadbala and Bhava Bala analysis.
 * **Modern API**: Built with FastAPI, providing a high-performance and easy-to-use API.
 * **Data Validation**: Pydantic is used for robust data validation.
 * **Scalable Architecture**: The project is structured with modular routers, making it easy to extend and maintain.
+* **Optimized for Mobile/Web**: Single-call comprehensive endpoints designed to minimize cloud latency and costs.
 
 ## API Endpoints
 
 The API provides a variety of endpoints for astrological calculations, including:
 
-* `/api/v1/comprehensive/full-analysis`: A comprehensive endpoint that returns a full astrological analysis.
-* `/api/v1/charts`: Endpoints for generating various divisional charts.
-* `/api/v1/dashas`: Endpoints for calculating Dasha periods.
+* `/api/v1/comprehensive/full-analysis`: **The "One-Stop-Shop" endpoint**. Returns D1-D60 charts, full Dasha/Bhukti details, Shadbala, Bhava Bala, Panchanga, and 100+ Yogas & Doshas in a single call.
+* `/api/v1/charts`: Endpoints for generating specific divisional charts.
+* `/api/v1/dashas`: Detailed Vimsottari Dasha and Bhukti sub-period calculations.
+* `/api/v1/strength`: Shadbala and Ashtakavarga bindu calculations.
+* `/api/v1/panchanga`: Real-time and birth Panchanga (Tithi, Vara, Nakshatra, etc.).
 * And many more!
 
 For a full list of endpoints and their details, please refer to the API documentation at `/docs`.
@@ -64,4 +69,4 @@ This project is intended to be deployed on Google Cloud. Detailed deployment ins
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT and GNU AGPLv3 Licenses.

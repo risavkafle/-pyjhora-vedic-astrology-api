@@ -12,15 +12,14 @@ async def get_full_analysis(request: ChartRequest):
     Get Complete Vedic Astrology Analysis in One Call
 
     Returns:
-    - D1 Chart (Rasi) with houses, planets, degrees
-    - D9 Chart (Navamsa) with houses, planets, degrees
-    - D10 Chart (Dasamsa) with houses, planets, degrees
-    - Maha Dasha (9 planetary periods)
-    - Antardasha/Bhukti (81 sub-periods)
-    - 7 Bhinna Ashtakavarga charts (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn)
-    - Sarvashtakavarga (Combined chart)
-    - All Yogas (planetary combinations)
-    - All Doshas (afflictions)
+    - All Divisional Charts (D1, D2, D3, D4, D7, D9, D10, D12, D16, D20, D24, D27, D30, D40, D45, D60)
+    - Maha Dasha & Bhukti (Vimsottari)
+    - Ashtakavarga (Bhinna & Sarva)
+    - Shadbala (Planetary Strengths)
+    - Bhava Bala (House Strengths)
+    - Panchanga (Tithi, Vara, Nakshatra, Yoga, Karana)
+    - Special Lagnas (Hora, Ghati, etc.)
+    - All Yogas & Doshas
 
     This endpoint combines all major calculations into a single response.
     """
@@ -30,10 +29,16 @@ async def get_full_analysis(request: ChartRequest):
             request.ayanamsa
         )
 
-        # Calculate D1, D9, D10 charts
-        d1_chart = calculator.calculate_chart('D1')
-        d9_chart = calculator.calculate_chart('D9')
-        d10_chart = calculator.calculate_chart('D10')
+        # Calculate all divisional charts
+        from app.services.calculator import CHART_FACTORS
+        all_charts = {}
+        for chart_id in CHART_FACTORS.keys():
+            chart_result = calculator.calculate_chart(chart_id)
+            all_charts[chart_id.lower()] = {
+                "name": f"{chart_id} - {chart_result.get('chart_type', chart_id)}",
+                "ascendant": chart_result.get('ascendant'),
+                "planets": chart_result.get('planets', [])
+            }
 
         # Calculate Maha Dasha
         maha_dasha = calculator.calculate_dasha('VIMSOTTARI')
@@ -44,10 +49,16 @@ async def get_full_analysis(request: ChartRequest):
         # Calculate Ashtakavarga (7 Bhinna + 1 Sarva)
         ashtakavarga = calculator.calculate_ashtakavarga()
 
-        # Calculate Yogas
-        yogas = calculator.calculate_yogas()
+        # Calculate Shadbala & Bhava Bala
+        shadbala = calculator.calculate_shadbala()
+        bhava_bala = calculator.calculate_bhava_bala()
 
-        # Calculate Doshas
+        # Calculate Panchanga & Special Lagnas
+        panchanga = calculator.calculate_panchanga()
+        special_lagnas = calculator.calculate_special_lagnas()
+
+        # Calculate Yogas & Doshas
+        yogas = calculator.calculate_yogas()
         doshas = calculator.calculate_doshas()
 
         # Compile comprehensive response
@@ -56,36 +67,20 @@ async def get_full_analysis(request: ChartRequest):
             "birth_data": request.birth_data.dict(),
             "ayanamsa": request.ayanamsa,
 
-            "charts": {
-                "d1_rasi": {
-                    "name": "D1 - Rasi (Birth Chart)",
-                    "ascendant": d1_chart['ascendant'],
-                    "planets": d1_chart['planets']
-                },
-                "d9_navamsa": {
-                    "name": "D9 - Navamsa (Marriage/Spouse)",
-                    "ascendant": d9_chart['ascendant'],
-                    "planets": d9_chart['planets']
-                },
-                "d10_dasamsa": {
-                    "name": "D10 - Dasamsa (Career)",
-                    "ascendant": d10_chart['ascendant'],
-                    "planets": d10_chart['planets']
-                }
-            },
+            "charts": all_charts,
 
             "dashas": {
+                "system": "Vimsottari",
+                "moon_nakshatra": maha_dasha.get('moon_nakshatra', {}),
                 "maha_dasha": {
-                    "system": "Vimsottari",
-                    "moon_nakshatra": maha_dasha.get('moon_nakshatra'),
                     "periods": maha_dasha.get('maha_dasha_periods', []),
                     "current_period": maha_dasha.get('current_dasha')
                 },
-                "antardasha": {
-                    "system": "Vimsottari",
+                "bhukti": {
                     "total_periods": len(antardasha.get('bhukti_periods', [])),
                     "periods": antardasha.get('bhukti_periods', []),
-                    "current_period": antardasha.get('current_bhukti')
+                    "current_period": antardasha.get('current_bhukti'),
+                    "description": "Sub-periods (Antar Dasha) within the Maha Dasha"
                 }
             },
 
@@ -99,6 +94,16 @@ async def get_full_analysis(request: ChartRequest):
                     "data": ashtakavarga.get('samudhaya_ashtakavarga', {})
                 }
             },
+
+            "strength": {
+                "shadbala": shadbala.get('planetary_strengths', []),
+                "bhava_bala": bhava_bala.get('house_strengths', []),
+                "strongest_house": bhava_bala.get('strongest_house'),
+                "weakest_house": bhava_bala.get('weakest_house')
+            },
+
+            "panchanga": panchanga,
+            "special_lagnas": special_lagnas.get('special_lagnas', {}),
 
             "yogas": {
                 "total_analyzed": len(yogas.get('yogas', [])),
@@ -115,17 +120,12 @@ async def get_full_analysis(request: ChartRequest):
             },
 
             "summary": {
-                "charts_calculated": ["D1 Rasi", "D9 Navamsa", "D10 Dasamsa"],
-                "maha_dasha_periods": len(maha_dasha.get('maha_dasha_periods', [])),
-                "antardasha_periods": len(antardasha.get('bhukti_periods', [])),
-                "bhinna_ashtakavarga_planets": 7,
+                "charts_calculated": list(all_charts.keys()),
+                "total_charts": len(all_charts),
+                "panchanga_ready": True,
+                "shadbala_ready": True,
                 "yogas_present": sum(1 for y in yogas.get('yogas', []) if y.get('present', False)),
-                "doshas_present": sum(1 for d in doshas.get('doshas', []) if d.get('present', False)),
-                "current_maha_dasha": maha_dasha.get('current_dasha', {}).get('lord') if maha_dasha.get('current_dasha') else None,
-                "strongest_planet_ashtakavarga": max(
-                    ashtakavarga.get('binna_ashtakavarga', {}).items(),
-                    key=lambda x: x[1].get('total', 0)
-                )[0] if ashtakavarga.get('binna_ashtakavarga') else None
+                "doshas_present": sum(1 for d in doshas.get('doshas', []) if d.get('present', False))
             }
         }
 
